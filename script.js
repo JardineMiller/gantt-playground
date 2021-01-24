@@ -7,9 +7,11 @@ Date.prototype.getWeekNumber = function() {
 };
 
 const pixelsPerHour = 8;
+const gantt = document.getElementById("gantt");
 const ganttBody = document.getElementById("ganttBody");
 const ganttLabels = document.getElementById("ganttLabels");
 const pixelsPerDay = 32;
+const numOfRows = 100;
 
 let totalDays = 0;
 
@@ -32,6 +34,24 @@ const initialisePersonBodyRows = function(numOfRows) {
     ganttPersonRows.id = "ganttPersonRows";
     ganttPersonRows.classList.add("gantt-person-rows");
 
+    const colors = [
+        'rgb(10, 186, 240)',
+        'rgb(10, 240, 163)',
+        '#0af00a',
+        '#cdf00a',
+        '#f0ba0a'
+    ];
+
+    function getRandomInt(min, max) {
+        const r = Math.random() * (max - min) + min
+        return Math.floor(r)
+    }
+
+    function getRandomCol() {
+        const randIndex = getRandomInt(0, colors.length);
+        return colors[randIndex];
+    }
+
     for (let i = 1; i <= numOfRows; i++) {
         const personRow = document.createElement("div");
 
@@ -41,26 +61,25 @@ const initialisePersonBodyRows = function(numOfRows) {
 
         ganttPersonRows.append(personRow);
 
-        function getRandomInt(min, max) {
-            min = Math.ceil(min);
-            max = Math.floor(max);
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
+
 
         let totalPixels = 0;
 
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 50; i++) {
             const ganttItem = document.createElement("div");
             ganttItem.classList.add("gantt-item");
 
-            const width = getRandomInt(20, 80);
-            const left = getRandomInt(totalPixels, totalPixels + 30);
+            const width = getRandomInt(20, 150);
+
+            const offset = getRandomInt(5, 50);
+            const left = totalPixels + offset;
 
             ganttItem.style.width = width + 'px';
             ganttItem.style.left = left + 'px';
             ganttItem.setAttribute("title", `Item - ${i}`);
+            ganttItem.style.background = getRandomCol();
 
-            totalPixels += width + left;
+            totalPixels += (width + offset);
 
             const ganttItemContent = document.createElement("div");
             ganttItemContent.classList.add("gantt-content");
@@ -79,22 +98,27 @@ const initialiseGanttHeader = function() {
     const monthNames = ["January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     ];
-    const monthLimit = 3;
+    const monthLimit = 8;
 
     // Add day row
     const dayRow = document.createElement("div");
     dayRow.classList.add("gantt-row");
     dayRow.classList.add("gantt-day-row");
+    dayRow.style.height = (numOfRows + 1) * 28 + 'px';
+
 
     // Add week row
     const weekRow = document.createElement("div");
     weekRow.classList.add("gantt-row");
     weekRow.classList.add("gantt-week-row");
+    weekRow.style.height = (numOfRows + 2) * 28 + 'px';
+
 
     // Add month row
     const monthRow = document.createElement("div");
     monthRow.classList.add("gantt-row");
     monthRow.classList.add("gantt-month-row");
+    monthRow.style.height = '28px'
 
     function daysInMonth(month, year) {
         return new Date(year, month, 0).getDate();
@@ -162,7 +186,7 @@ const initialiseGanttHeader = function() {
             }
         }
 
-        if (daysInWeek) {
+        if (i == (currentMonth + monthLimit) - 1 && daysInWeek) {
             const weekDiv = document.createElement("div");
             weekDiv.classList.add("gantt-cell");
             weekDiv.classList.add("gantt-week");
@@ -202,7 +226,8 @@ const initialiseGanttHeader = function() {
 const initialisePersonRows = function(numOfRows) {
     initialisePersonLabels(numOfRows);
     initialisePersonBodyRows(numOfRows);
-}(10);
+    ganttBody.style.height = numOfRows * 28;
+}(numOfRows);
 
 document.querySelectorAll(".gantt-item").forEach(ganttItem => {
     ganttItem.onmousedown = function(event) {
@@ -216,8 +241,8 @@ document.querySelectorAll(".gantt-item").forEach(ganttItem => {
         let shiftY = Math.round(event.clientY - ganttItem.getBoundingClientRect().top);
 
         ganttItem.style.position = 'absolute';
-        ganttItem.style.left = event.pageX - shiftX - ganttLabels.offsetWidth - 11 + 'px';
-        ganttItem.style.top = event.pageY - shiftY - 10 + 'px';
+        ganttItem.style.left = event.pageX - shiftX - ganttLabels.offsetWidth - 11 + gantt.scrollLeft + 'px';
+        ganttItem.style.top = event.pageY - shiftY - 10 + gantt.scrollTop + 'px';
         ganttItem.style.zIndex = 1000;
 
         ganttBody.append(ganttItem);
